@@ -127,16 +127,37 @@ export const Home = () => {
 // 表示するタスク
 const Tasks = (props) => {
   const { tasks, selectListId, isDoneDisplay } = props;
-  if (tasks === null) return <></>;
+  // if (tasks === null) return <></>;
+  if (!tasks) return <></>;
 
   // if(isDoneDisplay == "done"){
-  if (isDoneDisplay === "done") {
+  // if (isDoneDisplay === "done") {
+  // 残り日時を計算する関数
+    const calculateRemainingTime = (limit) => {
+      if (!limit) return null;
+      const now = new Date();
+      const deadline = new Date(limit);
+      const timeDiff = deadline - now;
+      if (timeDiff <= 0) return "期限切れ";
+      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}時間 ${minutes}分`;
+    };
+
+    // // 残り日時を計算する関数
+    // const calculateRemainingTime = (limit) => {
+    //   if (!limit) return null;
+    //   const timeDiff = new Date(limit) - new Date();
+    //   return timeDiff <= 0 ? "期限切れ" : `${Math.floor(timeDiff / (1000 * 60 * 60))}時間 ${Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))}分`;
+    // };
+
     return (
       <ul>
         {tasks
-          .filter((task) => {
-            return task.done === true;
-          })
+          // .filter((task) => {
+          //   return task.done === true;
+          // })
+          .filter((task) => (isDoneDisplay === "done" ? task.done : !task.done))
           .map((task, key) => (
             <li key={key} className="task-item">
               <Link
@@ -146,6 +167,10 @@ const Tasks = (props) => {
                 {task.title}
                 <br />
                 {task.done ? "完了" : "未完了"}
+                <br />
+                <small>期限: {task.limit ? task.limit.slice(0, 16) : "なし"}</small>
+                <br />
+                <small>残り時間: {calculateRemainingTime(task.limit)}</small>
               </Link>
             </li>
           ))}
@@ -153,24 +178,24 @@ const Tasks = (props) => {
     );
   }
 
-  return (
-    <ul>
-      {tasks
-        .filter((task) => {
-          return task.done === false;
-        })
-        .map((task, key) => (
-          <li key={key} className="task-item">
-            <Link
-              to={`/lists/${selectListId}/tasks/${task.id}`}
-              className="task-item-link"
-            >
-              {task.title}
-              <br />
-              {task.done ? "完了" : "未完了"}
-            </Link>
-          </li>
-        ))}
-    </ul>
-  );
-};
+//   return (
+//     <ul>
+//       {tasks
+//         .filter((task) => {
+//           return task.done === false;
+//         })
+//         .map((task, key) => (
+//           <li key={key} className="task-item">
+//             <Link
+//               to={`/lists/${selectListId}/tasks/${task.id}`}
+//               className="task-item-link"
+//             >
+//               {task.title}
+//               <br />
+//               {task.done ? "完了" : "未完了"}
+//             </Link>
+//           </li>
+//         ))}
+//     </ul>
+//   );
+// };

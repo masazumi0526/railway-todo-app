@@ -12,18 +12,21 @@ export const NewTask = () => {
   const [lists, setLists] = useState([]);
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
+  const [limit, setLimit] = useState(""); // 期限日時の追加
   const [errorMessage, setErrorMessage] = useState("");
   const [cookies] = useCookies();
   // const history = useHistory();
   const Navigate = useNavigate();
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
+  const handleLimitChange = (e) => setLimit(e.target.value); // 期限の変更
   const handleSelectList = (id) => setSelectListId(id);
   const onCreateTask = () => {
     const data = {
       title: title,
       detail: detail,
       done: false,
+      limit, // 期限日時を含めて送信
     };
 
     axios

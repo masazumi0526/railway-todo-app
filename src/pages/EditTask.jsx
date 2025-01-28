@@ -15,16 +15,19 @@ export const EditTask = () => {
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [isDone, setIsDone] = useState();
+  const [limit, setLimit] = useState("");  // 期限日時の追加
   const [errorMessage, setErrorMessage] = useState("");
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleIsDoneChange = (e) => setIsDone(e.target.value === "done");
+  const handleLimitChange = (e) => setLimit(e.target.value); // 期限の変更
   const onUpdateTask = () => {
     console.log(isDone);
     const data = {
       title: title,
       detail: detail,
       done: isDone,
+      limit,
     };
 
     axios
@@ -71,12 +74,32 @@ export const EditTask = () => {
         setTitle(task.title);
         setDetail(task.detail);
         setIsDone(task.done);
+        setLimit(task.limit); // 期限日時を設定
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
       });
     // }, [])
   }, [cookies.token, listId, taskId]);
+
+    // // 残り日時を計算する関数
+    // const calculateRemainingTime = () => {
+    //   if (!limit) return null;
+    //   const now = new Date();
+    //   const deadline = new Date(limit);
+    //   const timeDiff = deadline - now;
+    //   if (timeDiff <= 0) return "期限切れ";
+    //   const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+    //   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    //   return `${hours}時間 ${minutes}分`;
+    // };
+
+    // 残り日時を計算する関数
+    const calculateRemainingTime = () => {
+      if (!limit) return null;
+      const timeDiff = new Date(limit) - new Date();
+      return timeDiff <= 0 ? "期限切れ" : `${Math.floor(timeDiff / (1000 * 60 * 60))}時間 ${Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))}分`;
+    };
 
   return (
     <div>
@@ -103,6 +126,15 @@ export const EditTask = () => {
             value={detail}
           />
           <br />
+          <label>期限</label>
+          <br />
+          <input
+            type="datetime-local"
+            onChange={handleLimitChange}
+            className="edit-task-limit"
+            value={limit ? limit.slice(0, 16) : ""} // 期限の入力フォーム
+         />
+          <br />
           <div>
             <input
               type="radio"
@@ -123,6 +155,7 @@ export const EditTask = () => {
             />
             完了
           </div>
+          <div>残り時間: {calculateRemainingTime()}</div> {/* 残り時間の表示 */}
           <button
             type="button"
             className="delete-task-button"
