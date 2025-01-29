@@ -9,7 +9,7 @@ import "./editList.scss";
 
 export const EditList = () => {
   // const history = useHistory();
-  const Navigate = useNavigate;
+  const navigate = useNavigate;
   const { listId } = useParams();
   const [title, setTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -28,7 +28,7 @@ export const EditList = () => {
       })
       .then(() => {
         // history.push("/");
-        Navigate("/");
+        navigate("/");
       })
       .catch((err) => {
         setErrorMessage(`更新に失敗しました。 ${err}`);
@@ -44,7 +44,7 @@ export const EditList = () => {
       })
       .then(() => {
         // history.push("/");
-        Navigate("/");
+        navigate("/");
       })
       .catch((err) => {
         setErrorMessage(`削除に失敗しました。${err}`);
