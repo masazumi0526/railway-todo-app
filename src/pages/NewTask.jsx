@@ -92,9 +92,16 @@ export const NewTask = () => {
           <label>詳細</label>
           <br />
           <textarea
-            type="text"
             onChange={handleDetailChange}
             className="new-task-detail"
+          />
+          <br />
+          <label>期限</label>
+          <br />
+          <input
+            type="datetime-local"
+            onChange={handleLimitChange}
+            className="new-task-limit"
           />
           <br />
           <button
