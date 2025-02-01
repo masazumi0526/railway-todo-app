@@ -72,12 +72,17 @@ export const EditTask = () => {
         setTitle(task.title);
         setDetail(task.detail);
         setIsDone(task.done);
-        setLimit(task.limit ? task.limit.slice(0, 16) : ""); // 期限の表示形式修正
+        setLimit(task.limit ? convertToJST(task.limit) : ""); // 期限の表示形式修正
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
       });
   }, [cookies.token, listId, taskId]);
+
+  const convertToJST = (utcDate) => {
+    const date = new Date(utcDate);
+    return date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }).slice(0, 16);
+  };
 
   const calculateRemainingDateTime = () => {
     if (!limit) return null;

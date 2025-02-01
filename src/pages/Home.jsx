@@ -50,7 +50,6 @@ export const Home = () => {
       })
       .then((res) => {
         const sortedTasks = res.data.tasks.sort((a, b) => {
-          const now = new Date();
           const deadlineA = new Date(a.limit);
           const deadlineB = new Date(b.limit);
 
@@ -76,7 +75,6 @@ export const Home = () => {
       })
       .then((res) => {
         const sortedTasks = res.data.tasks.sort((a, b) => {
-          const now = new Date();
           const deadlineA = new Date(a.limit);
           const deadlineB = new Date(b.limit);
 
@@ -92,6 +90,13 @@ export const Home = () => {
       .catch((err) => {
         setErrorMessage(`タスクの取得に失敗しました。${err}`);
       });
+  };
+
+  // UTCから日本時間に変換する関数
+  const convertToJST = (utcDate) => {
+    const date = new Date(utcDate);
+    const formattedDate = date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+    return formattedDate.slice(0, 16); // 時刻の「T」を除くために先頭16文字を取得
   };
 
   return (
@@ -145,6 +150,7 @@ export const Home = () => {
               tasks={tasks}
               selectListId={selectListId}
               isDoneDisplay={isDoneDisplay}
+              convertToJST={convertToJST}
             />
           </div>
         </div>
@@ -154,7 +160,7 @@ export const Home = () => {
 };
 
 const Tasks = (props) => {
-  const { tasks, selectListId, isDoneDisplay } = props;
+  const { tasks, selectListId, isDoneDisplay, convertToJST } = props;
 
   const calculateRemainingDateTime = (limit) => {
     if (!limit) return null;
@@ -166,6 +172,17 @@ const Tasks = (props) => {
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
     return `${days}日 ${hours}時間 ${minutes}分`;
+  };
+
+  // 残り時間が1日を切った場合にスタイルを変更
+  const getRemainingStyle = (limit) => {
+    const now = new Date();
+    const deadline = new Date(limit);
+    const timeDiff = deadline - now;
+    if (timeDiff > 0 && timeDiff < 1000 * 60 * 60 * 24) {
+      return { fontWeight: "bold", color: "red", fontSize: "1.2em" };
+    }
+    return {};
   };
 
   if (!tasks) return <></>;
@@ -184,9 +201,13 @@ const Tasks = (props) => {
               <br />
               {task.done ? "完了" : "未完了"}
               <br />
-              <small>期限: {task.limit ? task.limit.slice(0, 16) : "なし"}</small>
+              <small>期限: {task.limit ? convertToJST(task.limit) : "なし"}</small>
               <br />
-              <small>残り日時: {calculateRemainingDateTime(task.limit)}</small>
+              <small
+                style={task.limit ? getRemainingStyle(task.limit) : {}}
+              >
+                残り日時: {calculateRemainingDateTime(task.limit)}
+              </small>
             </Link>
           </li>
         ))}
