@@ -22,11 +22,15 @@ export const NewTask = () => {
   const handleLimitChange = (e) => setLimit(e.target.value); // 期限の変更
   const handleSelectList = (id) => setSelectListId(id);
   const onCreateTask = () => {
+    if (!selectListId) {
+      setErrorMessage("リストが選択されていません。");
+      return;
+    }
     const data = {
       title: title,
       detail: detail,
       done: false,
-      limit, // 期限日時を含めて送信
+      limit: limit ? new Date(limit).toISOString() : null, // 期限日時を含めて送信
     };
 
     axios
@@ -53,12 +57,16 @@ export const NewTask = () => {
       })
       .then((res) => {
         setLists(res.data);
-        setSelectListId(res.data[0]?.id);
+        if (res.data.length > 0) {
+          setSelectListId(res.data[0].id);
+          console.log("デフォルトのリスト ID:", res.data[0].id);
+        } else {
+          setErrorMessage("リストが見つかりません。");
+        }
       })
       .catch((err) => {
-        setErrorMessage(`リストの取得に失敗しました。${err}`);
+        setErrorMessage(`リストの取得に失敗しました。${err.response?.data?.message || err}`);
       });
-    // }, [])
   }, [cookies.token]);
 
   return (

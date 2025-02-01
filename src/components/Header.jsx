@@ -1,23 +1,20 @@
 import React from "react";
 import { useCookies } from "react-cookie";
-import { useSelector, useDispatch } from "react-redux/es/exports";
-// import { useHistory } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "../authSlice";
 import "./header.scss";
 
 export const Header = () => {
-  const auth = useSelector((state) => state.auth.isSignIn);
-  const dispatch = useDispatch();
-  // const history = useHistory();
-  const navigate = useNavigate();
-  // const [cookies, setCookie, removeCookie] = useCookies();
-  const [removeCookie] = useCookies();
+  const auth = useSelector((state) => state.auth.isSignIn); // サインイン状態を取得
+  const dispatch = useDispatch(); // Reduxのdispatch関数
+  const navigate = useNavigate(); // React Router のナビゲーション
+  const [, , removeCookie] = useCookies(); // removeCookie を使うために useCookies を配列で受け取る
+
   const handleSignOut = () => {
-    dispatch(signOut());
-    removeCookie("token");
-    // history.push("/signin");
-    navigate("/signin");
+    dispatch(signOut()); // ReduxのsignOutアクションをディスパッチ
+    removeCookie("token"); // 'token' クッキーを削除
+    navigate("/signin"); // サインインページに遷移
   };
 
   return (

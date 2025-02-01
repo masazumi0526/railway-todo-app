@@ -7,20 +7,41 @@
 
 .edit-list-form {
   color: #555555;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
 }
 
 .edit-list-title {
   width: 300px;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.edit-list-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .delete-list-button {
   color: #ff3333;
   border: solid 1px #ff3333;
+  background-color: transparent;
   width: 80px;
   height: 40px;
-  margin: 25px 5px;
+  margin: 10px 0;
   border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.delete-list-button:hover {
+  background-color: #ff3333;
+  color: white;
 }
 
 .edit-list-button {
@@ -28,9 +49,18 @@
   color: #ffffff;
   width: 80px;
   height: 40px;
+  margin: 10px 0;
   border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+  border: none;
+}
+
+.edit-list-button:hover {
+  background-color: #1e2591;
 }
 
 .error-message {
   color: #ff3333;
+  font-size: 14px;
 }

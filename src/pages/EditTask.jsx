@@ -3,31 +3,32 @@ import { Header } from "../components/Header";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { url } from "../const";
-// import { useHistory, useNavigate, useParams } from "react-router-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import "./editTask.scss";
 
 export const EditTask = () => {
-  // const history = useHistory();
-  const Navigate = useNavigate();
+  const navigate = useNavigate();
   const { listId, taskId } = useParams();
   const [cookies] = useCookies();
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
-  const [isDone, setIsDone] = useState();
-  const [limit, setLimit] = useState("");  // 期限日時の追加
+  const [isDone, setIsDone] = useState(false);
+  const [limit, setLimit] = useState(""); // 期限日時
   const [errorMessage, setErrorMessage] = useState("");
+
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleIsDoneChange = (e) => setIsDone(e.target.value === "done");
-  const handleLimitChange = (e) => setLimit(e.target.value); // 期限の変更
+  const handleLimitChange = (e) => setLimit(e.target.value);
+
   const onUpdateTask = () => {
-    console.log(isDone);
+    const formattedLimit = limit ? new Date(limit).toISOString() : null;
+
     const data = {
-      title: title,
-      detail: detail,
+      title,
+      detail,
       done: isDone,
-      limit,
+      limit: formattedLimit,
     };
 
     axios
@@ -36,10 +37,8 @@ export const EditTask = () => {
           authorization: `Bearer ${cookies.token}`,
         },
       })
-      .then((res) => {
-        console.log(res.data);
-        // history.push("/");
-        Navigate("/");
+      .then(() => {
+        navigate("/");
       })
       .catch((err) => {
         setErrorMessage(`更新に失敗しました。${err}`);
@@ -54,8 +53,7 @@ export const EditTask = () => {
         },
       })
       .then(() => {
-        // history.push("/");
-        Navigate("/");
+        navigate("/");
       })
       .catch((err) => {
         setErrorMessage(`削除に失敗しました。${err}`);
@@ -74,32 +72,28 @@ export const EditTask = () => {
         setTitle(task.title);
         setDetail(task.detail);
         setIsDone(task.done);
-        setLimit(task.limit); // 期限日時を設定
+        setLimit(task.limit ? task.limit.slice(0, 16) : ""); // 期限の表示形式修正
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
       });
-    // }, [])
   }, [cookies.token, listId, taskId]);
 
-    // // 残り日時を計算する関数
-    // const calculateRemainingTime = () => {
-    //   if (!limit) return null;
-    //   const now = new Date();
-    //   const deadline = new Date(limit);
-    //   const timeDiff = deadline - now;
-    //   if (timeDiff <= 0) return "期限切れ";
-    //   const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-    //   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    //   return `${hours}時間 ${minutes}分`;
-    // };
-
-    // 残り日時を計算する関数
-    const calculateRemainingTime = () => {
-      if (!limit) return null;
-      const timeDiff = new Date(limit) - new Date();
-      return timeDiff <= 0 ? "期限切れ" : `${Math.floor(timeDiff / (1000 * 60 * 60))}時間 ${Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))}分`;
-    };
+  const calculateRemainingDateTime = () => {
+    if (!limit) return null;
+    
+    const limitDate = new Date(limit);
+    const now = new Date();
+    const timeDiff = limitDate - now;
+    
+    if (timeDiff <= 0) return "期限切れ";
+  
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+  
+    return `${days}日 ${hours}時間 ${minutes}分`;
+  };  
 
   return (
     <div>
@@ -120,7 +114,6 @@ export const EditTask = () => {
           <label>詳細</label>
           <br />
           <textarea
-            type="text"
             onChange={handleDetailChange}
             className="edit-task-detail"
             value={detail}
@@ -132,8 +125,8 @@ export const EditTask = () => {
             type="datetime-local"
             onChange={handleLimitChange}
             className="edit-task-limit"
-            value={limit ? limit.slice(0, 16) : ""} // 期限の入力フォーム
-         />
+            value={limit}
+          />
           <br />
           <div>
             <input
@@ -142,7 +135,7 @@ export const EditTask = () => {
               name="status"
               value="todo"
               onChange={handleIsDoneChange}
-              checked={isDone === false ? "checked" : ""}
+              checked={!isDone}
             />
             未完了
             <input
@@ -151,23 +144,15 @@ export const EditTask = () => {
               name="status"
               value="done"
               onChange={handleIsDoneChange}
-              checked={isDone === true ? "checked" : ""}
+              checked={isDone}
             />
             完了
           </div>
-          <div>残り時間: {calculateRemainingTime()}</div> {/* 残り時間の表示 */}
-          <button
-            type="button"
-            className="delete-task-button"
-            onClick={onDeleteTask}
-          >
+          <div>残り日時: {calculateRemainingDateTime()}</div> 
+          <button type="button" className="delete-task-button" onClick={onDeleteTask}>
             削除
           </button>
-          <button
-            type="button"
-            className="edit-task-button"
-            onClick={onUpdateTask}
-          >
+          <button type="button" className="edit-task-button" onClick={onUpdateTask}>
             更新
           </button>
         </form>

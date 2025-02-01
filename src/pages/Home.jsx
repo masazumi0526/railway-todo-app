@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import axios from "axios";
 import { Header } from "../components/Header";
@@ -13,58 +13,87 @@ export const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [cookies] = useCookies();
+  const location = useLocation();
+
   const handleIsDoneDisplayChange = (e) => setIsDoneDisplay(e.target.value);
+
+  // リスト一覧を取得
   useEffect(() => {
     axios
       .get(`${url}/lists`, {
-        headers: {
-          authorization: `Bearer ${cookies.token}`,
-        },
+        headers: { authorization: `Bearer ${cookies.token}` },
       })
       .then((res) => {
         setLists(res.data);
+
+        // URL に selectListId がある場合、それを選択
+        const params = new URLSearchParams(location.search);
+        const selectedId = params.get("selectListId");
+        if (selectedId) {
+          setSelectListId(Number(selectedId));
+        } else if (res.data.length > 0) {
+          setSelectListId(res.data[0].id);
+        }
       })
       .catch((err) => {
         setErrorMessage(`リストの取得に失敗しました。${err}`);
       });
-    // }, []);
-  }, [cookies.token]);
+  }, [cookies.token, location.search]);
 
+  // 選択中のリストのタスクを取得
   useEffect(() => {
-    const listId = lists[0]?.id;
-    if (typeof listId !== "undefined") {
-      setSelectListId(listId);
-      axios
-        .get(`${url}/lists/${listId}/tasks`, {
-          headers: {
-            authorization: `Bearer ${cookies.token}`,
-          },
-        })
-        .then((res) => {
-          setTasks(res.data.tasks);
-        })
-        .catch((err) => {
-          setErrorMessage(`タスクの取得に失敗しました。${err}`);
+    if (!selectListId) return;
+
+    axios
+      .get(`${url}/lists/${selectListId}/tasks`, {
+        headers: { authorization: `Bearer ${cookies.token}` },
+      })
+      .then((res) => {
+        const sortedTasks = res.data.tasks.sort((a, b) => {
+          const now = new Date();
+          const deadlineA = new Date(a.limit);
+          const deadlineB = new Date(b.limit);
+
+          // 期限がない場合は、後ろに回す
+          if (!deadlineA && !deadlineB) return 0;
+          if (!deadlineA) return 1;
+          if (!deadlineB) return -1;
+
+          return deadlineA - deadlineB; // 期限が近い順に並べ替え
         });
-    }
-    // }, [lists]);
-  }, [cookies.token, lists]);
+        setTasks(sortedTasks);
+      })
+      .catch((err) => {
+        setErrorMessage(`タスクの取得に失敗しました。${err}`);
+      });
+  }, [cookies.token, selectListId]);
 
   const handleSelectList = (id) => {
     setSelectListId(id);
     axios
       .get(`${url}/lists/${id}/tasks`, {
-        headers: {
-          authorization: `Bearer ${cookies.token}`,
-        },
+        headers: { authorization: `Bearer ${cookies.token}` },
       })
       .then((res) => {
-        setTasks(res.data.tasks);
+        const sortedTasks = res.data.tasks.sort((a, b) => {
+          const now = new Date();
+          const deadlineA = new Date(a.limit);
+          const deadlineB = new Date(b.limit);
+
+          // 期限がない場合は、後ろに回す
+          if (!deadlineA && !deadlineB) return 0;
+          if (!deadlineA) return 1;
+          if (!deadlineB) return -1;
+
+          return deadlineA - deadlineB; // 期限が近い順に並べ替え
+        });
+        setTasks(sortedTasks);
       })
       .catch((err) => {
         setErrorMessage(`タスクの取得に失敗しました。${err}`);
       });
   };
+
   return (
     <div>
       <Header />
@@ -124,78 +153,43 @@ export const Home = () => {
   );
 };
 
-// 表示するタスク
 const Tasks = (props) => {
   const { tasks, selectListId, isDoneDisplay } = props;
-  // if (tasks === null) return <></>;
+
+  const calculateRemainingDateTime = (limit) => {
+    if (!limit) return null;
+    const now = new Date();
+    const deadline = new Date(limit);
+    const timeDiff = deadline - now;
+    if (timeDiff <= 0) return "期限切れ";
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${days}日 ${hours}時間 ${minutes}分`;
+  };
+
   if (!tasks) return <></>;
 
-  // if(isDoneDisplay == "done"){
-  // if (isDoneDisplay === "done") {
-  // 残り日時を計算する関数
-    const calculateRemainingTime = (limit) => {
-      if (!limit) return null;
-      const now = new Date();
-      const deadline = new Date(limit);
-      const timeDiff = deadline - now;
-      if (timeDiff <= 0) return "期限切れ";
-      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-      return `${hours}時間 ${minutes}分`;
-    };
-
-    // // 残り日時を計算する関数
-    // const calculateRemainingTime = (limit) => {
-    //   if (!limit) return null;
-    //   const timeDiff = new Date(limit) - new Date();
-    //   return timeDiff <= 0 ? "期限切れ" : `${Math.floor(timeDiff / (1000 * 60 * 60))}時間 ${Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))}分`;
-    // };
-
-    return (
-      <ul>
-        {tasks
-          // .filter((task) => {
-          //   return task.done === true;
-          // })
-          .filter((task) => (isDoneDisplay === "done" ? task.done : !task.done))
-          .map((task, key) => (
-            <li key={key} className="task-item">
-              <Link
-                to={`/lists/${selectListId}/tasks/${task.id}`}
-                className="task-item-link"
-              >
-                {task.title}
-                <br />
-                {task.done ? "完了" : "未完了"}
-                <br />
-                <small>期限: {task.limit ? task.limit.slice(0, 16) : "なし"}</small>
-                <br />
-                <small>残り時間: {calculateRemainingTime(task.limit)}</small>
-              </Link>
-            </li>
-          ))}
-      </ul>
-    );
-  }
-
-//   return (
-//     <ul>
-//       {tasks
-//         .filter((task) => {
-//           return task.done === false;
-//         })
-//         .map((task, key) => (
-//           <li key={key} className="task-item">
-//             <Link
-//               to={`/lists/${selectListId}/tasks/${task.id}`}
-//               className="task-item-link"
-//             >
-//               {task.title}
-//               <br />
-//               {task.done ? "完了" : "未完了"}
-//             </Link>
-//           </li>
-//         ))}
-//     </ul>
-//   );
-// };
+  return (
+    <ul>
+      {tasks
+        .filter((task) => (isDoneDisplay === "done" ? task.done : !task.done))
+        .map((task, key) => (
+          <li key={key} className="task-item">
+            <Link
+              to={`/lists/${selectListId}/tasks/${task.id}`}
+              className="task-item-link"
+            >
+              {task.title}
+              <br />
+              {task.done ? "完了" : "未完了"}
+              <br />
+              <small>期限: {task.limit ? task.limit.slice(0, 16) : "なし"}</small>
+              <br />
+              <small>残り日時: {calculateRemainingDateTime(task.limit)}</small>
+            </Link>
+          </li>
+        ))}
+    </ul>
+  );
+};
