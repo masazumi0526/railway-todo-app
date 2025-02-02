@@ -1,0 +1,53 @@
+/* App.scss */
+@import './variables'; // _variables.scss をインポート
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.App {
+  text-align: center;
+}
+
+.container {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+
+/* デスクトップ向けのスタイル（デフォルト） */
+.App {
+  font-size: 18px;
+}
+
+.container {
+  width: 60%;
+}
+
+/* タブレット向けのスタイル（最大768px） */
+@media (max-width: $breakpoint-tablet) {
+  .App {
+    font-size: 16px;
+  }
+
+  .container {
+    width: 75%;
+    padding: 15px;
+  }
+}
+
+/* スマートフォン向けのスタイル（最大320px） */
+@media (max-width: $breakpoint-mobile) {
+  .App {
+    font-size: 14px;
+  }
+
+  .container {
+    width: 90%;
+    padding: 10px;
+  }
+}
