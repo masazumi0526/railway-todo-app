@@ -118,7 +118,8 @@ export const Home = () => {
               </p>
             </div>
           </div>
-          <ul className="list-tab">
+          {/* <ul className="list-tab"> */}
+          <ul className="list-tab" role="tablist">
             {lists.map((list, key) => {
               const isActive = list.id === selectListId;
               return (
@@ -126,6 +127,14 @@ export const Home = () => {
                   key={key}
                   className={`list-tab-item ${isActive ? "active" : ""}`}
                   onClick={() => handleSelectList(list.id)}
+                  role="tab" // (追加) タブの役割を明示
+                  aria-selected={isActive} // (追加) 選択状態を示す
+                  tabIndex="0" // (追加) キーボードフォーカス可能にする
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleSelectList(list.id); // (追加) Enterキーまたはスペースキーで選択
+                    }
+                  }}
                 >
                   {list.title}
                 </li>
@@ -141,6 +150,7 @@ export const Home = () => {
               <select
                 onChange={handleIsDoneDisplayChange}
                 className="display-select"
+                aria-label="タスク表示切り替え" // (追加) スクリーンリーダー向け説明を追加
               >
                 <option value="todo">未完了</option>
                 <option value="done">完了</option>
