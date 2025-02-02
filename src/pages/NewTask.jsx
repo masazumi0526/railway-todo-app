@@ -4,7 +4,6 @@ import axios from "axios";
 import { url } from "../const";
 import { Header } from "../components/Header";
 import "./newTask.scss";
-// import { useHistory } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 export const NewTask = () => {
@@ -15,12 +14,13 @@ export const NewTask = () => {
   const [limit, setLimit] = useState(""); // 期限日時の追加
   const [errorMessage, setErrorMessage] = useState("");
   const [cookies] = useCookies();
-  // const history = useHistory();
   const Navigate = useNavigate();
+  
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleLimitChange = (e) => setLimit(e.target.value); // 期限の変更
-  const handleSelectList = (id) => setSelectListId(id);
+  const handleSelectList = (e) => setSelectListId(e.target.value);
+
   const onCreateTask = () => {
     if (!selectListId) {
       setErrorMessage("リストが選択されていません。");
@@ -40,7 +40,6 @@ export const NewTask = () => {
         },
       })
       .then(() => {
-        // history.push("/");
         Navigate("/");
       })
       .catch((err) => {
@@ -58,8 +57,7 @@ export const NewTask = () => {
       .then((res) => {
         setLists(res.data);
         if (res.data.length > 0) {
-          setSelectListId(res.data[0].id);
-          console.log("デフォルトのリスト ID:", res.data[0].id);
+          setSelectListId(res.data[0].id); // デフォルトで最初のリストを選択
         } else {
           setErrorMessage("リストが見つかりません。");
         }
@@ -79,11 +77,12 @@ export const NewTask = () => {
           <label>リスト</label>
           <br />
           <select
-            onChange={(e) => handleSelectList(e.target.value)}
+            onChange={handleSelectList}
+            value={selectListId}
             className="new-task-select-list"
           >
             {lists.map((list, key) => (
-              <option key={key} className="list-item" value={list.id}>
+              <option key={key} value={list.id}>
                 {list.title}
               </option>
             ))}
@@ -95,6 +94,7 @@ export const NewTask = () => {
             type="text"
             onChange={handleTitleChange}
             className="new-task-title"
+            value={title}
           />
           <br />
           <label>詳細</label>
@@ -102,6 +102,7 @@ export const NewTask = () => {
           <textarea
             onChange={handleDetailChange}
             className="new-task-detail"
+            value={detail}
           />
           <br />
           <label>期限</label>
@@ -110,6 +111,7 @@ export const NewTask = () => {
             type="datetime-local"
             onChange={handleLimitChange}
             className="new-task-limit"
+            value={limit}
           />
           <br />
           <button
