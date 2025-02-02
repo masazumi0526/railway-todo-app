@@ -81,6 +81,7 @@ export const EditTask = () => {
 
   const convertToJST = (utcDate) => {
     const date = new Date(utcDate);
+    console.log(date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }).slice(0, 16))
     return date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }).slice(0, 16);
   };
 

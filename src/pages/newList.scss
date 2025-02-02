@@ -1,8 +1,11 @@
 @charset "utf-8";
 
 .new-list {
-  width: 1000px;
+  width: 100%;
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 0 16px; /* スマホでも左右に余白を確保 */
+  box-sizing: border-box;
 }
 
 .new-list-form {
