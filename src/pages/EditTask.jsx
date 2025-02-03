@@ -13,7 +13,8 @@ export const EditTask = () => {
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [isDone, setIsDone] = useState(false);
-  const [limit, setLimit] = useState(""); // 期限日時
+  const [limit, setLimit] = useState(""); // JSTの期限日時
+  const [originalLimit, setOriginalLimit] = useState(""); // APIから取得したISO形式の期限
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleTitleChange = (e) => setTitle(e.target.value);
@@ -22,7 +23,8 @@ export const EditTask = () => {
   const handleLimitChange = (e) => setLimit(e.target.value);
 
   const onUpdateTask = () => {
-    const formattedLimit = limit ? new Date(limit).toISOString() : null;
+    // 期限が変更されていなければ、そのまま送信
+    const formattedLimit = limit === convertToJST(originalLimit) ? originalLimit : convertToUTC(limit);
 
     const data = {
       title,
@@ -72,7 +74,8 @@ export const EditTask = () => {
         setTitle(task.title);
         setDetail(task.detail);
         setIsDone(task.done);
-        setLimit(task.limit ? convertToJST(task.limit) : ""); // 期限の表示形式修正
+        setOriginalLimit(task.limit || ""); // 取得した元のISO形式の期限を保存
+        setLimit(task.limit ? convertToJST(task.limit) : ""); // JSTに変換して表示
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
@@ -81,25 +84,31 @@ export const EditTask = () => {
 
   const convertToJST = (utcDate) => {
     const date = new Date(utcDate);
-    console.log(date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }).slice(0, 16))
-    return date.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }).slice(0, 16);
+    date.setHours(date.getHours() + 9); // UTCからJST（+9時間）に変換
+    return date.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm" 形式に変換
+  };
+
+  const convertToUTC = (jstDate) => {
+    const date = new Date(jstDate);
+    date.setHours(date.getHours() - 9); // JSTからUTCに変換
+    return date.toISOString();
   };
 
   const calculateRemainingDateTime = () => {
     if (!limit) return null;
-    
+
     const limitDate = new Date(limit);
     const now = new Date();
     const timeDiff = limitDate - now;
-    
+
     if (timeDiff <= 0) return "期限切れ";
-  
+
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-  
+
     return `${days}日 ${hours}時間 ${minutes}分`;
-  };  
+  };
 
   return (
     <div>
@@ -154,7 +163,7 @@ export const EditTask = () => {
             />
             完了
           </div>
-          <div>残り日時: {calculateRemainingDateTime()}</div> 
+          <div>残り日時: {calculateRemainingDateTime()}</div>
           <button type="button" className="delete-task-button" onClick={onDeleteTask}>
             削除
           </button>
