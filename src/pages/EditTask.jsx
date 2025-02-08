@@ -90,7 +90,7 @@ export const EditTask = () => {
 
   const convertToUTC = (jstDate) => {
     const date = new Date(jstDate);
-    date.setHours(date.getHours()); // JSTからUTCに変換しない
+    // date.setHours(date.getHours()); // JSTからUTCに変換しない
     return date.toISOString();
   };
 
